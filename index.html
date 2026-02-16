@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url("/static/bg_medical.jpg");
+            background-size: cover;
+            background-position: center;
+        }
+
+        .chat-box {
+            background: rgba(255,255,255,0.95);
+            width: 400px;
+            max-height: 600px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #4facfe;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 15px;
+            max-width: 75%;
+            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .user {
+            align-self: flex-end;
+            background: #4facfe;
+            color: white;
+            text-align: right;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: #f1f1f1;
+            color: black;
+        }
+
+        .typing {
+            font-style: italic;
+            color: #555;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+
+        .chat-input button {
+            margin-left: 10px;
+            padding: 10px;
+            border: none;
+            background: #4facfe;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background: #00c6ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-box">
+        <div class="chat-header">🩺 Medical Assistant</div>
+
+        <div class="chat-body" id="chatBody">
+            <div class="message bot">👋 Hello! Ask me about any medicine.</div>
+        </div>
+
+        <form id="chatForm" class="chat-input">
+            <input type="text" id="medicineInput" placeholder="Type medicine name..." required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const chatBody = document.getElementById('chatBody');
+        const input = document.getElementById('medicineInput');
+
+        // Medicine dictionary (same 20 medicines)
+        const medicines = {
+            "paracetamol": "Uses: Reduces fever and mild pain.<br>Side Effects: Rare allergic reaction.<br>Precautions: Do not overdose.",
+            "ibuprofen": "Uses: Reduces inflammation and pain.<br>Side Effects: Stomach upset.<br>Precautions: Take with food.",
+            "amoxicillin": "Uses: Antibiotic for infections.<br>Side Effects: Nausea, diarrhea.<br>Precautions: Complete the course.",
+            "lisinopril": "Uses: Lowers blood pressure.<br>Side Effects: Dizziness.<br>Precautions: Monitor BP regularly.",
+            "atorvastatin": "Uses: Lowers cholesterol.<br>Side Effects: Muscle pain.<br>Precautions: Avoid grapefruit.",
+            "omeprazole": "Uses: Reduces stomach acid.<br>Side Effects: Headache.<br>Precautions: Take before meals.",
+            "salbutamol": "Uses: Relieves asthma symptoms.<br>Side Effects: Tremors, palpitations.<br>Precautions: Follow dosage.",
+            "metformin": "Uses: Controls blood sugar.<br>Side Effects: Nausea, stomach upset.<br>Precautions: Take with meals.",
+            "cetirizine": "Uses: Allergy relief.<br>Side Effects: Drowsiness.<br>Precautions: Avoid alcohol.",
+            "prednisone": "Uses: Reduces inflammation.<br>Side Effects: Weight gain, mood changes.<br>Precautions: Take as prescribed.",
+            "loratadine": "Uses: Allergy relief.<br>Side Effects: Rare, headache.<br>Precautions: Safe for most adults.",
+            "azithromycin": "Uses: Antibiotic for infections.<br>Side Effects: Stomach upset.<br>Precautions: Complete full course.",
+            "hydrochlorothiazide": "Uses: Diuretic for high BP.<br>Side Effects: Frequent urination.<br>Precautions: Monitor electrolytes.",
+            "gabapentin": "Uses: Nerve pain relief.<br>Side Effects: Dizziness, drowsiness.<br>Precautions: Avoid driving initially.",
+            "simvastatin": "Uses: Lowers cholesterol.<br>Side Effects: Muscle pain.<br>Precautions: Avoid grapefruit.",
+            "fluoxetine": "Uses: Treats depression.<br>Side Effects: Nausea, headache.<br>Precautions: May take 2-4 weeks to work.",
+            "clindamycin": "Uses: Antibiotic for infections.<br>Side Effects: Diarrhea.<br>Precautions: Complete full course.",
+            "allopurinol": "Uses: Treats gout.<br>Side Effects: Rash, nausea.<br>Precautions: Take after meals.",
+            "warfarin": "Uses: Blood thinner.<br>Side Effects: Bleeding.<br>Precautions: Monitor INR.",
+            "furosemide": "Uses: Diuretic for fluid retention.<br>Side Effects: Frequent urination.<br>Precautions: Take in morning."
+        };
+
+        chatForm.addEventListener('submit', function(e){
+            e.preventDefault();
+
+            const userText = input.value.trim();
+            if(!userText) return;
+
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerHTML = userText;
+            chatBody.appendChild(userMsg);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            input.value = '';
+
+            // Add typing message
+            const botTyping = document.createElement('div');
+            botTyping.className = 'message bot typing';
+            botTyping.innerHTML = 'Medical Assistant is typing...';
+            chatBody.appendChild(botTyping);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Show bot response after 0.8s
+            setTimeout(() => {
+                botTyping.innerHTML = medicines[userText.toLowerCase()] || "Sorry! This medicine is not in our database.";
+                botTyping.classList.remove('typing');
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }, 800);
+        });
+    </script>
+</body>
+</html>
